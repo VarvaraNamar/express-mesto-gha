@@ -33,7 +33,7 @@ const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
-    .then((user) => res.status(HTTP_CODES.success).send(user))
+    .then((user) => res.status(HTTP_CODES.success).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res
