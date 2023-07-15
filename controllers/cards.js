@@ -29,51 +29,6 @@ const createCard = (req, res) => {
     });
 }; // создание карточки
 
-// const deleteCard = (req, res) => {
-//   Card.findByIdAndRemove(req.params.cardId)
-//     .then((card) => {
-//       if (!card) {
-//         return res
-//           .status(NOT_FOUND_CODE)
-//           .send({ message: 'Карточка с указанным _id не найдена.' });
-//       }
-//       return res
-//         .status(SUCCESS_CODE)
-//         .send(card);
-//     })
-//     .catch((err) => {
-//       if (err.name === 'CastError') {
-//         res
-//           .status(BAD_REQUEST_CODE)
-//           .send({ message: 'Переданы некорректные данные' });
-//       } else {
-//         res
-//           .status(SERVER_ERROR_CODE)
-//           .send({ message: 'Ошибка на сервере' });
-//       }
-//     });
-// }; // удаление карточки
-// const deleteCard = (req, res) => {
-//   Card.findById(req.params.cardId)
-//     .then((card) => {
-//       if (!card) {
-//         return res.status(NOT_FOUND_CODE).send({
-// message: 'Карточка с указанным _id не найдена.' });
-//       }
-//       return card.remove()
-//         .then(() => {
-//           res.status(SUCCESS_CODE).send({ message: 'Карточка успешно удалена' });
-//         });
-//     })
-//     .catch((err) => {
-//       if (err.name === 'CastError') {
-//         res.status(BAD_REQUEST_CODE).send({ message: 'Переданы некорректные данные.' });
-//       } else {
-//         res.status(SERVER_ERROR_CODE).send({ message: 'Ошибка' });
-//       }
-//     });
-// };
-
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .orFail()
@@ -93,7 +48,7 @@ const deleteCard = (req, res) => {
         .status(SERVER_ERROR_CODE)
         .send({ message: 'Ошибка на сервере' });
     });
-}; // удаление карточки новое
+}; // удаление карточки
 
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
@@ -126,24 +81,22 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => {
-      if (!card) {
+    .orFail()
+    .then((card) => res.status(SUCCESS_CODE).send(card))
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
         return res
           .status(NOT_FOUND_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
+          .send({ message: 'Карточка с указанным _id не найдена' });
       }
-      return res.status(SUCCESS_CODE).send(card);
-    })
-    .catch((err) => {
       if (err.name === 'CastError') {
-        res
+        return res
           .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные.' });
-      } else {
-        res
-          .status(SERVER_ERROR_CODE)
-          .send({ message: 'Ошибка на сервере' });
       }
+      return res
+        .status(SERVER_ERROR_CODE)
+        .send({ message: 'Ошибка на сервере' });
     });
 }; // дизлайк карточки
 
