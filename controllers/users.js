@@ -57,7 +57,7 @@ const updateUser = (req, res) => {
   User.findByIdAndUpdate(req.user._id, { name, about }, { runValidators: true, new: true })
     .then((user) => res.status(SUCCESS_CODE).send(user))
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         return res
           .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные' });
