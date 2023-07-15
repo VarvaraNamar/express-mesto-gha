@@ -39,13 +39,13 @@ const deleteCard = (req, res) => {
       }
       return res
         .status(SUCCESS_CODE)
-        .send({ message: 'Карточка успешно удалена' });
+        .send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res
           .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные.' });
+          .send({ message: 'Переданы некорректные данные' });
       } else {
         res
           .status(SERVER_ERROR_CODE)
@@ -60,24 +60,22 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => {
-      if (!card) {
+    .orFail()
+    .then((card) => res.status(SUCCESS_CODE).send(card))
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
         return res
           .status(NOT_FOUND_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
+          .send({ message: 'Карточка с указанным _id не найдена' });
       }
-      return res.status(SUCCESS_CODE).send(card);
-    })
-    .catch((err) => {
       if (err.name === 'CastError') {
-        res
+        return res
           .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные.' });
-      } else {
-        res
-          .status(SERVER_ERROR_CODE)
-          .send({ message: 'Ошибка на сервере' });
       }
+      return res
+        .status(SERVER_ERROR_CODE)
+        .send({ message: 'Ошибка на сервере' });
     });
 }; // лайк карточки
 
