@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/users');
+const { NOT_FOUND_CODE } = require('./utils/constants');
 
 const { PORT = 3000 } = process.env;
 
@@ -18,6 +19,9 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
+app.use('*', (req, res) => {
+  res.status(NOT_FOUND_CODE).send({ message: 'Запрашиваемый ресурс не найден' });
+});
 
 mongoose
   .connect('mongodb://127.0.0.1:27017/mestodb')
