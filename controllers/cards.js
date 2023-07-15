@@ -53,27 +53,45 @@ const createCard = (req, res) => {
 //       }
 //     });
 // }; // удаление карточки
-
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .orFail()
-    .then((card) => res.status(SUCCESS_CODE).send(card))
+  Card.findById(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
+      }
+      return card.remove()
+        .then(() => {
+          res.status(SUCCESS_CODE).send({ message: 'Карточка успешно удалена' });
+        });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_CODE).send({ message: 'Переданы некорректные данные.' });
+      } else {
+        res.status(SERVER_ERROR_CODE).send({ message: 'Ошибка' });
       }
-      if (err.name === 'DocumentNotFoundError') {
-        return res
-          .status(NOT_FOUND_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена' });
-      }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Ошибка на сервере' });
     });
-}; // удаление карточки новое
+};
+// const deleteCard = (req, res) => {
+//   Card.findByIdAndRemove(req.params.cardId)
+//     .orFail()
+//     .then((card) => res.status(SUCCESS_CODE).send(card))
+//     .catch((err) => {
+//       if (err.name === 'CastError') {
+//         return res
+//           .status(BAD_REQUEST_CODE)
+//           .send({ message: 'Переданы некорректные данные' });
+//       }
+//       if (err.name === 'DocumentNotFoundError') {
+//         return res
+//           .status(NOT_FOUND_CODE)
+//           .send({ message: 'Карточка с указанным _id не найдена' });
+//       }
+//       return res
+//         .status(SERVER_ERROR_CODE)
+//         .send({ message: 'Ошибка на сервере' });
+//     });
+// }; // удаление карточки новое
 
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
