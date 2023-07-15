@@ -1,26 +1,29 @@
 const Card = require('../models/card');
-const HTTP_CODES = require('../utils/constants');
+const { SUCCESS_CODE } = require('../utils/constants');
+const { BAD_REQUEST_CODE } = require('../utils/constants');
+const { NOT_FOUND_CODE } = require('../utils/constants');
+const { SERVER_ERROR_CODE } = require('../utils/constants');
 
 const getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.status(HTTP_CODES.success).send(cards))
+    .then((cards) => res.status(SUCCESS_CODE).send(cards))
     .catch(() => {
-      res.status(HTTP_CODES.serverError).send({ message: 'Ошибка на сервере' });
+      res.status(SERVER_ERROR_CODE).send({ message: 'Ошибка на сервере' });
     });
 }; // получение всех карточек
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.status(HTTP_CODES.success).send({ data: card }))
+    .then((card) => res.status(SUCCESS_CODE).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res
-          .status(HTTP_CODES.badRequest)
+          .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные.' });
       } else {
         res
-          .status(HTTP_CODES.serverError)
+          .status(SERVER_ERROR_CODE)
           .send({ message: 'Ошибка на сервере' });
       }
     });
@@ -31,21 +34,21 @@ const deleteCard = (req, res) => {
     .then((card) => {
       if (!card) {
         return res
-          .status(HTTP_CODES.notFound)
+          .status(NOT_FOUND_CODE)
           .send({ message: 'Карточка с указанным _id не найдена.' });
       }
       return res
-        .status(HTTP_CODES.success)
+        .status(SUCCESS_CODE)
         .send({ message: 'Карточка успешно удалена' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res
-          .status(HTTP_CODES.badRequest)
+          .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные.' });
       } else {
         res
-          .status(HTTP_CODES.serverError)
+          .status(SERVER_ERROR_CODE)
           .send({ message: 'Ошибка на сервере' });
       }
     });
@@ -60,19 +63,19 @@ const likeCard = (req, res) => {
     .then((card) => {
       if (!card) {
         return res
-          .status(HTTP_CODES.notFound)
+          .status(NOT_FOUND_CODE)
           .send({ message: 'Карточка с указанным _id не найдена.' });
       }
-      return res.status(HTTP_CODES.success).send(card);
+      return res.status(SUCCESS_CODE).send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res
-          .status(HTTP_CODES.badRequest)
+          .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные.' });
       } else {
         res
-          .status(HTTP_CODES.serverError)
+          .status(SERVER_ERROR_CODE)
           .send({ message: 'Ошибка на сервере' });
       }
     });
@@ -87,19 +90,19 @@ const dislikeCard = (req, res) => {
     .then((card) => {
       if (!card) {
         return res
-          .status(HTTP_CODES.notFound)
+          .status(NOT_FOUND_CODE)
           .send({ message: 'Карточка с указанным _id не найдена.' });
       }
-      return res.status(HTTP_CODES.success).send(card);
+      return res.status(SUCCESS_CODE).send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res
-          .status(HTTP_CODES.badRequest)
+          .status(BAD_REQUEST_CODE)
           .send({ message: 'Переданы некорректные данные.' });
       } else {
         res
-          .status(HTTP_CODES.serverError)
+          .status(SERVER_ERROR_CODE)
           .send({ message: 'Ошибка на сервере' });
       }
     });

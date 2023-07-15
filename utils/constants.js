@@ -1,10 +1,11 @@
-const HTTP_CODES = {
-  success: 200, // успешный ответ
-  badRequest: 400, // некорректный запрос
-  notFound: 404, // код не найден
-  serverError: 500, // ошибка на сервере
-};
+const SUCCESS_CODE = 200; // успешный ответ
+const BAD_REQUEST_CODE = 400; // некорректный запрос
+const NOT_FOUND_CODE = 404; // код не найден
+const SERVER_ERROR_CODE = 500; // ошибка на сервере
 
 module.exports = {
-  HTTP_CODES,
+  SUCCESS_CODE,
+  BAD_REQUEST_CODE,
+  NOT_FOUND_CODE,
+  SERVER_ERROR_CODE,
 };
