@@ -1,102 +1,118 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { SUCCESS_CODE } = require('../utils/constants');
-const { BAD_REQUEST_CODE } = require('../utils/constants');
-const { NOT_FOUND_CODE } = require('../utils/constants');
-const { SERVER_ERROR_CODE } = require('../utils/constants');
+const AuthError = require('../utils/AuthError');
+const BadRequestError = require('../utils/BadRequestError');
+const NotFoundError = require('../utils/NotFoundError');
+const AlreadyExistError = require('../utils/AlreadyExistError');
 
-const getUsers = (req, res) => {
+const SUCCESS_CODE = 200;
+
+const getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.status(SUCCESS_CODE).send(users))
-    .catch(() => {
-      res.status(SERVER_ERROR_CODE).send({ message: 'Ошибка на сервере' });
-    });
+    .then((users) => {
+      res.status(SUCCESS_CODE).send({ users });
+    })
+    .catch(next);
 }; // все пользователи
 
-const getUser = (req, res) => {
-  User.findById(req.params.userId)
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
+    .then(({ _id: userId }) => {
+      if (userId) {
+        const token = jwt.sign({ userId }, 'secret-key', {
+          expiresIn: '7d',
+        });
+        return res.send({ message: 'Авторизация прошла успешно', token });
+      }
+      throw new AuthError('Неверные почта или пароль');
+    })
+    .catch(next);
+}; // ЛОГИН
+
+const getCurrentUser = (req, res, next) => {
+  const { userId } = req.user;
+  User.findById(userId)
+    .then((user) => {
+      res.status(SUCCESS_CODE).send({ user });
+    })
+    .catch(next);
+}; // поиск пользователя
+
+const getUser = (req, res, next) => {
+  const { userId } = req.params;
+  User.findById(userId)
     .orFail()
-    .then((user) => res.status(SUCCESS_CODE).send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+    .then((user) => {
+      if (user) {
+        res.status(SUCCESS_CODE).send({ user });
+      } else {
+        throw new NotFoundError('Пользователь с указанным _id не найден');
       }
-      if (err.name === 'DocumentNotFoundError') {
-        return res
-          .status(NOT_FOUND_CODE)
-          .send({ message: 'Пользователь с указанным _id не найден' });
-      }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Ошибка на сервере' });
-    });
+    })
+    .catch(next);
 }; // конкретный пользователь по id
 
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
 
-  User.create({ name, about, avatar })
-    .then((user) => res.status(SUCCESS_CODE).send({ data: user }))
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((user) => {
+      res.send({
+        data: {
+          name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
+        },
+      });
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
-      } else {
-        res
-          .status(SERVER_ERROR_CODE)
-          .send({ message: 'Ошибка на сервере' });
+      if (err.code === 11000) {
+        throw new AlreadyExistError('Пользователь с указанным email уже существует');
       }
-    });
+    })
+    .catch(next);
 }; // создание нового пользователя
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
-
   User.findByIdAndUpdate(req.user._id, { name, about }, { runValidators: true, new: true })
-    .then((user) => res.status(SUCCESS_CODE).send(user))
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь с указанным _id не найден');
+      }
+      res.status(SUCCESS_CODE).send({ user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+        throw new BadRequestError('Переданы некорректные данные');
+      } else {
+        next(err);
       }
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(NOT_FOUND_CODE).send({
-          message: 'Пользователь с указанным _id не найден',
-        });
-      }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Ошибка на сервере' });
     });
 }; // изменение данных пользователя
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-
   User.findByIdAndUpdate(req.user._id, { avatar }, { runValidators: true, new: true })
     .orFail()
-    .then((user) => res.status(SUCCESS_CODE).send(user))
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь с указанным _id не найден');
+      }
+      res.status(SUCCESS_CODE).send({ user });
+    })
     .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(NOT_FOUND_CODE).send({
-          message: 'Пользователь с указанным _id не найден',
-        });
-      }
       if (err.name === 'ValidationError') {
-        const validationErrors = Object.values(err.errors).map(
-          (error) => error.message,
-        );
-        return res.status(BAD_REQUEST_CODE).send({
-          message: 'Переданы некорректные данные.',
-          validationErrors,
-        });
+        throw new BadRequestError('Переданы некорректные данные');
+      } else {
+        next(err);
       }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Ошибка на сервере' });
     });
 }; // изменение аватара
 
@@ -106,4 +122,6 @@ module.exports = {
   getUser,
   updateUser,
   updateAvatar,
+  login,
+  getCurrentUser,
 };
