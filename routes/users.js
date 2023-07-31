@@ -8,12 +8,12 @@ const {
 const usersRouter = Router();
 
 usersRouter.get('/', getUsers);
-usersRouter.get('/me', getCurrentUser);
 usersRouter.get('/:userId', celebrate({
   params: Joi.object().keys({
     userId: Joi.string().length(24).hex().required(),
   }),
 }), getUser);
+usersRouter.get('/me', getCurrentUser);
 usersRouter.patch('/me', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
