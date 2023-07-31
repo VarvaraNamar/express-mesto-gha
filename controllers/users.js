@@ -11,7 +11,7 @@ const SUCCESS_CODE = 200;
 const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
-      res.status(SUCCESS_CODE).send({ users });
+      res.send({ users });
     })
     .catch(next);
 }; // все пользователи
