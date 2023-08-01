@@ -38,8 +38,7 @@ const login = (req, res, next) => {
 }; // ЛОГИН
 
 const getCurrentUser = (req, res, next) => {
-  User.findById(req.user._id)
-    .orFail(new NotFoundError('Пользователь с таким id не найден'))
+  User.findById(req.user)
     .then((user) => res.send({ user }))
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -49,14 +48,7 @@ const getCurrentUser = (req, res, next) => {
       }
     })
     .catch(next);
-};
-// const getCurrentUser = (req, res, next) => {
-//   User.findById(req.user)
-//     .then((user) => {
-//       res.send({ user });
-//     })
-//     .catch(next);
-// };// поиск пользователя
+}; // поиск пользователя
 
 const getUser = (req, res, next) => {
   const { userId } = req.params;
