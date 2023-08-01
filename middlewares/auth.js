@@ -16,6 +16,7 @@ const auth = (req, res, next) => {
 };
 
 module.exports = auth;
+
 // const extractBearerToken = (header) => header.replace('Bearer ', '');
 
 // // eslint-disable-next-line consistent-return

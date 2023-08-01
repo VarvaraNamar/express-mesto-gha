@@ -1,10 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const { celebrate, Joi, errors } = require('celebrate');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+
 const NotFoundError = require('./utils/NotFoundError');
 
 const { PORT = 3000 } = process.env;
@@ -20,6 +22,7 @@ mongoose
     console.log('epic fail');
   });
 
+app.use(cookieParser());
 app.use('/', express.json());
 app.use('/users', auth, usersRouter);
 app.use('/cards', auth, cardsRouter);
