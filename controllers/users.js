@@ -7,7 +7,7 @@ const NotFoundError = require('../utils/NotFoundError');
 const AlreadyExistError = require('../utils/AlreadyExistError');
 const AuthError = require('../utils/AuthError');
 
-const SUCCESS_CODE = 200;
+const { SUCCESS_CODE, CREATED_CODE } = require('../utils/constants');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -73,7 +73,7 @@ const createUser = (req, res, next) => {
       name, about, avatar, email, password: hash,
     }))
     .then((user) => {
-      res.send({
+      res.status(CREATED_CODE).send({
         data: {
           name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
         },
@@ -82,10 +82,11 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         throw new AlreadyExistError('Пользователь с указанным email уже существует');
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
-}; // создание нового пользователя
+    });
+};// создание нового пользователя
 
 const updateUser = (req, res, next) => {
   const { name, about } = req.body;
@@ -118,10 +119,9 @@ const updateAvatar = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         throw new BadRequestError('Переданы некорректные данные');
-      } else {
-        next(err);
       }
-    });
+    })
+    .catch(next);
 }; // изменение аватара
 
 module.exports = {

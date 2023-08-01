@@ -3,7 +3,7 @@ const BadRequestError = require('../utils/BadRequestError');
 const AccessDeniedError = require('../utils/AccessDeniedError');
 const NotFoundError = require('../utils/NotFoundError');
 
-const SUCCESS_CODE = 200;
+const { SUCCESS_CODE, CREATED_CODE } = require('../utils/constants');
 
 const getCards = (req, res, next) => {
   Card.find({})
@@ -14,7 +14,7 @@ const getCards = (req, res, next) => {
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.status(SUCCESS_CODE).send(card))
+    .then((card) => res.status(CREATED_CODE).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         throw new BadRequestError('Переданы некорректные данные.');
