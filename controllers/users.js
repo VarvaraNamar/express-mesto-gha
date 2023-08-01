@@ -5,6 +5,7 @@ const User = require('../models/user');
 const BadRequestError = require('../utils/BadRequestError');
 const NotFoundError = require('../utils/NotFoundError');
 const AlreadyExistError = require('../utils/AlreadyExistError');
+const AuthError = require('../utils/AuthError');
 
 const SUCCESS_CODE = 200;
 
@@ -37,12 +38,25 @@ const login = (req, res, next) => {
 }; // ЛОГИН
 
 const getCurrentUser = (req, res, next) => {
-  User.findById(req.user)
-    .then((user) => {
-      res.send({ data: user });
+  User.findById(req.user._id)
+    .orFail(new NotFoundError('Пользователь с таким id не найден'))
+    .then((user) => res.send({ user }))
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        throw new AuthError('Необходима авторизация');
+      } else {
+        throw new BadRequestError('Переданы некорректные данные');
+      }
     })
     .catch(next);
-}; // поиск пользователя
+};
+// const getCurrentUser = (req, res, next) => {
+//   User.findById(req.user)
+//     .then((user) => {
+//       res.send({ user });
+//     })
+//     .catch(next);
+// };// поиск пользователя
 
 const getUser = (req, res, next) => {
   const { userId } = req.params;
