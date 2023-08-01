@@ -24,9 +24,7 @@ const createCard = (req, res, next) => {
 }; // создание карточки
 
 const deleteCard = (req, res, next) => {
-  const { _id } = req.params;
-
-  Card.findById(_id)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         throw new NotFoundError('Карточка с указанным id не найдена');
@@ -39,6 +37,13 @@ const deleteCard = (req, res, next) => {
           res.status(SUCCESS_CODE).send({ message: 'Карточка успешно удалена' });
         })
         .catch(next);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы некорректные данные.'));
+      } else {
+        next(err);
+      }
     });
 }; // удаление карточки
 
