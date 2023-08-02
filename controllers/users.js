@@ -81,7 +81,7 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        throw new AlreadyExistError('Пользователь с указанным email уже существует');
+        next(new AlreadyExistError('Пользователь с указанным email уже существует'));
       } else {
         next(err);
       }
@@ -118,10 +118,11 @@ const updateAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError('Переданы некорректные данные');
+        next(new BadRequestError('Переданы некорректные данные'));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 }; // изменение аватара
 
 module.exports = {
